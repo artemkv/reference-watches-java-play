@@ -45,8 +45,22 @@ public class JpaBrandRepository implements BrandRepository {
         return supplyAsync(() -> wrap(em -> update(em, person)), executionContext);
     }
 
+    @Override
+    public CompletionStage<Boolean> delete(long id) {
+        return supplyAsync(() -> wrap(em -> delete(em, id)), executionContext);
+    }
+
     private <T> T wrap(Function<EntityManager, T> function) {
         return jpaApi.withTransaction(function);
+    }
+
+    private Brand getBrand(EntityManager em, long id) {
+        return em.find(Brand.class, id);
+    }
+
+    private Stream<Brand> list(EntityManager em) {
+        List<Brand> brands = em.createQuery("select b from Brand b", Brand.class).getResultList();
+        return brands.stream();
     }
 
     private Brand insert(EntityManager em, Brand brand) {
@@ -63,12 +77,12 @@ public class JpaBrandRepository implements BrandRepository {
         return true;
     }
 
-    private Stream<Brand> list(EntityManager em) {
-        List<Brand> brands = em.createQuery("select b from Brand b", Brand.class).getResultList();
-        return brands.stream();
-    }
-
-    private Brand getBrand(EntityManager em, long id) {
-        return em.find(Brand.class, id);
+    private boolean delete(EntityManager em, long id) {
+        Brand existing = em.find(Brand.class, id);
+        if (existing == null) {
+            return false;
+        }
+        em.remove(existing);
+        return true;
     }
 }

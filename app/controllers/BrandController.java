@@ -93,4 +93,16 @@ public class BrandController extends Controller {
 
         }
     }
+
+    public CompletionStage<Result> deleteBrand(long id) {
+        return brandRepository
+            .delete(id)
+            .thenApplyAsync(
+                removed -> {
+                    if (!removed) {
+                        return notFound(String.format("Brand with id %d cannot be found.", id));
+                    }
+                    return noContent();
+                });
+    }
 }

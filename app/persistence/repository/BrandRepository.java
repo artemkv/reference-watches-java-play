@@ -13,4 +13,5 @@ public interface BrandRepository {
     CompletionStage<Stream<Brand>> list();
     CompletionStage<Brand> create(Brand person);
     CompletionStage<Boolean> update(Brand person);
+    CompletionStage<Boolean> delete(long id);
 }
