@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 @ImplementedBy(JpaBrandRepository.class)
 public interface BrandRepository {
-    CompletionStage<Optional<Brand>> find(long id);
+    CompletionStage<Brand> find(long id);
     CompletionStage<Stream<Brand>> list();
     CompletionStage<Brand> add(Brand person);
 }

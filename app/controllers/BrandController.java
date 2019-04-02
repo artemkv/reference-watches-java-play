@@ -27,15 +27,23 @@ public class BrandController extends Controller {
         this.brandRepository = brandRepository;
     }
 
-    public Result getBrand(long id) {
-        return badRequest(String.format("Brand with id %d cannot be found.", id));
+    public CompletionStage<Result> getBrand(long id) {
+        return brandRepository
+            .find(id)
+            .thenApplyAsync(
+                brand -> {
+                    if (brand != null) {
+                        return ok(Json.toJson(BrandMapper.makeBrandDto(brand)));
+                    }
+                    return notFound(String.format("Brand with id %d cannot be found.", id));
+                });
     }
 
     public CompletionStage<Result> getBrands() {
         return brandRepository
             .list()
-            .thenApplyAsync(brands -> ok(
-                Json.toJson(brands
+            .thenApplyAsync(
+                brands -> ok(Json.toJson(brands
                     .map(BrandMapper::makeBrandDto)
                     .collect(Collectors.toList()))));
     }
@@ -50,8 +58,8 @@ public class BrandController extends Controller {
             Brand brand = BrandMapper.makeBrand(brandDto);
             return brandRepository
                 .add(brand)
-                .thenApplyAsync(brandCreated ->
-                    created(Json.toJson(BrandMapper.makeBrandDto(brandCreated)))
+                .thenApplyAsync(
+                    brandCreated -> created(Json.toJson(BrandMapper.makeBrandDto(brandCreated)))
                         .withHeader(
                             LOCATION,
                             routes.BrandController.getBrand(brandCreated.getId()).toString()));
