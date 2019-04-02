@@ -11,5 +11,6 @@ import java.util.stream.Stream;
 public interface BrandRepository {
     CompletionStage<Brand> find(long id);
     CompletionStage<Stream<Brand>> list();
-    CompletionStage<Brand> add(Brand person);
+    CompletionStage<Brand> create(Brand person);
+    CompletionStage<Boolean> update(Brand person);
 }

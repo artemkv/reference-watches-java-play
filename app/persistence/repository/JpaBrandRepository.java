@@ -36,8 +36,13 @@ public class JpaBrandRepository implements BrandRepository {
     }
 
     @Override
-    public CompletionStage<Brand> add(Brand person) {
+    public CompletionStage<Brand> create(Brand person) {
         return supplyAsync(() -> wrap(em -> insert(em, person)), executionContext);
+    }
+
+    @Override
+    public CompletionStage<Boolean> update(Brand person) {
+        return supplyAsync(() -> wrap(em -> update(em, person)), executionContext);
     }
 
     private <T> T wrap(Function<EntityManager, T> function) {
@@ -49,20 +54,21 @@ public class JpaBrandRepository implements BrandRepository {
         return brand;
     }
 
+    private boolean update(EntityManager em, Brand brand) {
+        Brand existing = em.find(Brand.class, brand.getId());
+        if (existing == null) {
+            return false;
+        }
+        em.merge(brand);
+        return true;
+    }
+
     private Stream<Brand> list(EntityManager em) {
         List<Brand> brands = em.createQuery("select b from Brand b", Brand.class).getResultList();
         return brands.stream();
     }
 
     private Brand getBrand(EntityManager em, long id) {
-        Query query = em.createQuery("select b from Brand b where b.id=?1", Brand.class);
-        query.setParameter(1, id);
-        Brand brand = null;
-        try {
-            brand = (Brand) query.getSingleResult();
-        } catch (NoResultException ex) {
-            // TODO: log no result?
-        }
-        return brand;
+        return em.find(Brand.class, id);
     }
 }
