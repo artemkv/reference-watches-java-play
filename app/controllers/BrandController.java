@@ -8,6 +8,7 @@ import persistence.model.Brand;
 import persistence.repository.BrandRepository;
 import play.core.j.HttpExecutionContext;
 import play.libs.Json;
+import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
@@ -33,19 +34,27 @@ public class BrandController extends Controller {
     public CompletionStage<Result> getBrands() {
         return brandRepository
             .list()
-            .thenApplyAsync(brands -> ok(Json.toJson(brands.collect(Collectors.toList()))));
+            .thenApplyAsync(brands -> ok(
+                Json.toJson(brands
+                    .map(BrandMapper::makeBrandDto)
+                    .collect(Collectors.toList()))));
     }
 
+    @BodyParser.Of(BodyParser.Json.class)
     public CompletionStage<Result> createBrand(Http.Request request) {
         JsonNode json = request.body().asJson();
-        if(json == null) {
+        if (json == null) {
             return supplyAsync(() -> badRequest("Expecting Json data"));
         } else {
             BrandToPostDto brandDto = Json.fromJson(json, BrandToPostDto.class); // TODO: runtime exception
             Brand brand = BrandMapper.makeBrand(brandDto);
             return brandRepository
                 .add(brand)
-                .thenApplyAsync(p -> redirect(routes.BrandController.getBrand(brand.getId())));
+                .thenApplyAsync(brandCreated ->
+                    created(Json.toJson(BrandMapper.makeBrandDto(brandCreated)))
+                        .withHeader(
+                            LOCATION,
+                            routes.BrandController.getBrand(brandCreated.getId()).toString()));
         }
     }
 }
